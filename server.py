@@ -2,12 +2,23 @@ import asyncio
 import websockets
 connection = set()
 
+
+
+async def handler(websocket,path):
+    async for ws in websocket:
+        connection.add(websocket)
+        data = websocket.recv()
+        print(ws)
+        await asyncio.wait([ws.send(f"{data} !") for ws in connection])
+
 async def hello(websocket, path):
     connection.add(websocket)
+    print(len(connection))
     try:
         data = await websocket.recv()
         print(data)
-        await asyncio.wait([ws.send({data}) for ws in connection])
+
+        await asyncio.wait([ws.send(f"{data} !") for ws in connection])
         await asyncio.sleep(10)
     finally:
         connection.remove(websocket)
