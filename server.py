@@ -7,7 +7,7 @@ async def hello(websocket, path):
     try:
         data = await websocket.recv()
         print(data)
-        await asyncio.wait([ws.send({data}) for ws in connection])
+        await websocket.send(f"heo")
         await asyncio.sleep(10)
     finally:
         connection.remove(websocket)
