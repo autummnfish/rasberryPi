@@ -53,11 +53,16 @@ async def send_flush(uri):
     async with websockets.connect(uri) as websocket:
         await websocket.send("on")
         data = await websocket.recv()
+        # asyncio.sleep(10)
         return data
 
 
     
-
+async def send_flush_off(uri):
+    async with websockets.connect(uri) as websocket:
+        await websocket.send("off")
+        data = await websocket.recv()
+        return data
 
 
 
@@ -70,7 +75,7 @@ def main():
     curr_vals = []
     prev_emas = []
     led_switch = None
-    uri = "ws://192.168.1.12:3000"
+    uri = "wss://websockets-server.herokuapp.com"
 
     while True:
 
@@ -78,16 +83,15 @@ def main():
         if len(prev_emas) > 0:
             curr_emas = calc_emas(curr_vals, prev_emas)
     
-            # if is_dark(curr_emas[0]): led.on()
-            # else: 
-            #     led.off()
+            if is_dark(curr_emas[0]): led.on()
+            else: 
+                led.off()
             
             if is_moved(curr_emas[1:], prev_emas[1:]):
                 led_switch = asyncio.get_event_loop().run_until_complete(send_flush(uri))
-            # else:
-            #     asyncio.get_event_loop().run_until_complete(send_flush_off(uri))
+            elif led_switch != "off":
+                led_switch = asyncio.get_event_loop().run_until_complete(send_flush_off(uri))
 
-            print(led_switch == "on")
             if led_switch == "on":
                 flash()
 
@@ -100,12 +104,7 @@ def main():
 
 
 
-# async def send_flush_off(uri):
-#     async with websockets.connect(uri) as websocket:
-#         await websocket.send(f"off")
-#         data = await websocket.recv()
-#         led_switch = data
-#         print(data)
+
 
 if __name__ == "__main__":
     main()
