@@ -19,6 +19,8 @@ ay = MCP3208(channel=6)
 az = MCP3208(channel=7)
 led = LED(17)
 
+
+
 def calc_emas(curr_vals, prev_emas):
     curr_emas = []
     for i in range(len(curr_vals)):
@@ -47,11 +49,20 @@ def flash():
 
 
 
-
+async def send_flush(uri):
+    async with websockets.connect(uri) as websocket:
+        await websocket.send("on")
+        data = await websocket.recv()
+        # asyncio.sleep(10)
+        return data
 
 
     
-
+async def send_flush_off(uri):
+    async with websockets.connect(uri) as websocket:
+        await websocket.send("off")
+        data = await websocket.recv()
+        return data
 
 
 
@@ -60,10 +71,11 @@ def flash():
 
 def main():
 
-    led_switch = None
+
     curr_vals = []
     prev_emas = []
-    uri = "ws://192.168.1.12:3000"
+    led_switch = None
+    uri = "wss://websockets-server.herokuapp.com"
 
     while True:
 
@@ -76,12 +88,10 @@ def main():
                 led.off()
             
             if is_moved(curr_emas[1:], prev_emas[1:]):
-                asyncio.get_event_loop().run_until_complete(send_flush(uri))
-            else:
-                asyncio.get_event_loop().run_until_complete(send_flush_off(uri))
+                led_switch = asyncio.get_event_loop().run_until_complete(send_flush(uri))
+            elif led_switch != "off":
+                led_switch = asyncio.get_event_loop().run_until_complete(send_flush_off(uri))
 
-
-            led_switch = asyncio.create_task(receive_server(uri))
             if led_switch == "on":
                 flash()
 
@@ -92,18 +102,9 @@ def main():
  
 
 
-async def send_flush(uri):
-    async with websockets.connect(uri) as websocket:
-        await websocket.send(f"on")
 
-async def send_flush_off(uri):
-    async with websockets.connect(uri) as websocket:
-        await websocket.send(f"off")
 
-async def receive_server(uri):
-    async with websockets.connect(uri) as websocket:
-        data = await websocket.recv()
-        return data
+
 
 if __name__ == "__main__":
     main()

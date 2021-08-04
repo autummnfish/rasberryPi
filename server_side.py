@@ -1,15 +1,15 @@
 import asyncio
 import websockets
+import os
 connection = set()
+
 
 async def server_test(websocket, path):
     connection.add(websocket)
-    print(len(connection))
     try:
         data = await websocket.recv()
-        print(data)
         await asyncio.create_task(broadcast_without_self(websocket,data))
-        # await asyncio.sleep(2)
+        await asyncio.sleep(2)
     finally:
         connection.remove(websocket)
 
@@ -23,7 +23,7 @@ async def broadcast_without_self(self,msg):
 
 
 def main():
-    start_server = websockets.serve(server_test, "0.0.0.0", 3000)
+    start_server = websockets.serve(server_test, "", int(os.environ["PORT"]))
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()
 
