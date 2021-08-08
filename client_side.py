@@ -12,6 +12,7 @@ ACC_TH = 0.02
 FLASH_COUNT = 5
 FLASH_INTERVAL_SEC = 0.1
 SENSOR_INTERVAL_SEC = 0.1
+SLEEP_SEC = 0.1
 
 lum = MCP3208(channel=0)
 ax = MCP3208(channel=5)
@@ -53,7 +54,7 @@ async def send_flush(uri):
     async with websockets.connect(uri) as websocket:
         await websocket.send("on")
         data = await websocket.recv()
-        # asyncio.sleep(10)
+        await asyncio.sleep(SLEEP_SEC)
         return data
 
 
@@ -62,10 +63,8 @@ async def send_flush_off(uri):
     async with websockets.connect(uri) as websocket:
         await websocket.send("off")
         data = await websocket.recv()
+        await asyncio.sleep(SLEEP_SEC)
         return data
-
-
-
 
 
 
@@ -83,13 +82,15 @@ def main():
         if len(prev_emas) > 0:
             curr_emas = calc_emas(curr_vals, prev_emas)
     
-            if is_dark(curr_emas[0]): led.on()
-            else: 
-                led.off()
+            # if is_dark(curr_emas[0]): led.on()
+            # else: 
+            #     led.off()
             
             if is_moved(curr_emas[1:], prev_emas[1:]):
+                print("call")
                 led_switch = asyncio.get_event_loop().run_until_complete(send_flush(uri))
-            elif led_switch != "off":
+            else:
+                print("fail")
                 led_switch = asyncio.get_event_loop().run_until_complete(send_flush_off(uri))
 
             if led_switch == "on":
