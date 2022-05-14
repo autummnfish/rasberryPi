@@ -16,8 +16,8 @@ async def server_test(websocket, path):
 
 async def broadcast_without_self(self,msg):
     for ws in connection:
-        # if ws == self:
-        #     continue
+        if ws == self:
+             continue
         await ws.send(msg)
 
 
